@@ -1,34 +1,39 @@
 === AdSense Protect ===
 Contributors: Hasan Shofan
-Tags: adsense, protect, invalid clicks, clicks, bot, security, logs
+Tags: adsense, protect, invalid clicks, bot, security, logs
 Requires at least: 5.0
 Tested up to: 6.8.2
+Requires PHP: 7.0
 Stable tag: 1.0.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
+Donate link: https://www.patreon.com/your_patreon_link
 
-A simple WordPress plugin to log user visits and identify suspicious external click activity to protect your AdSense account.
+A robust and flexible solution to protect your AdSense account from invalid clicks and bot activity.
 
 == Description ==
 
-The AdSense Protect plugin provides a robust solution for tracking external user clicks and identifying potentially invalid click activity. It helps website owners monitor traffic and report suspicious behavior to ad networks like Google AdSense.
+AdSense Protect is a robust WordPress plugin designed to help website owners identify and manage invalid click activity. It provides a simple, yet powerful, solution for monitoring traffic and generating reports for ad networks like Google AdSense.
 
-Key Features:
-* **Tracks External Clicks:** Records external link clicks to identify bot activity.
-* **IP-based Analytics:** Provides a summary of suspicious IP addresses with repeated external clicks (3 or more in 24 hours).
-* **Automatic Cleanup:** Automatically cleans up old log data to maintain database performance. The plugin keeps the **50,000 most recent logs** and deletes any logs older than **24 hours**. This ensures your database remains fast and efficient.
-* **Manual Control:** Allows administrators to manually delete all logs with a single click.
-* **Data Export:** Exports suspicious external clicks into a clean CSV file for easy reporting. The exported file groups identical clicks (same IP, user agent, and link) and is sorted by the number of clicks.
+The plugin tracks external clicks and analyzes user behavior to detect suspicious patterns. Its clean admin interface makes it easy to view logs, identify problematic IPs, and export data for official reporting.
 
-== Installation ==
+= Main Features =
+- **Automatic External Click Tracking:** Automatically logs clicks on external links to identify suspicious traffic.
+- **Detailed IP Analytics:** Provides a summary of suspicious IP addresses that show a high number of external clicks (3 or more in 24 hours).
+- **Efficient Database Management:** Automatically cleans up logs older than 24 hours and maintains a maximum of 50,000 records to ensure optimal database performance.
+- **Actionable Data Export:** Exports suspicious external click data into a formatted CSV file, with identical entries grouped and sorted by click count.
+- **Manual Control:** Offers an option to manually delete all log data instantly.
 
-1.  Upload the `adsense-protect` folder to the `/wp-content/plugins/` directory.
-2.  Activate the plugin through the 'Plugins' menu in WordPress.
-3.  Go to the 'AdSense Protect' menu item in your WordPress admin dashboard to view the logs and manage settings.
+= Usage =
 
-== Screenshots ==
+= Viewing Logs =
+After activating the plugin, navigate to the **"AdSense Protect"** menu item in your WordPress dashboard. Here, you can view a paginated list of all recorded clicks, see a summary of suspicious IPs, and access the export and delete options.
 
-(No screenshots available yet)
+= Generating a Report =
+To generate a report for AdSense, simply click the **"Export External Clicks"** button on the plugin's admin page. The generated CSV file will contain all the necessary data, grouped by user and sorted by click count, making it easy to fill out Google's Invalid Clicks Contact Form.
+
+= Customizing Behavior =
+For advanced users, the plugin's main file includes a setting to enable or disable internal visit logging, ensuring the plugin only records the data you need.
 
 == Changelog ==
 
@@ -38,8 +43,7 @@ Key Features:
 == Frequently Asked Questions ==
 
 = How do I report invalid clicks to AdSense? =
-You can use the data from the 'Suspicious IPs' table and the generated CSV file to fill out Google AdSense's [Invalid Clicks Contact Form](https://support.google.com/adsense/contact/invalid_clicks_contact).
+Use the data provided by this plugin to fill out the official [Google AdSense Invalid Clicks Contact Form](https://support.google.com/adsense/contact/invalid_clicks_contact).
 
 = Is this plugin a replacement for my ad network's security? =
-
 No. This plugin is a simple tool to help you monitor and identify suspicious activity. You should always follow your ad network's policies and use their official reporting tools.
