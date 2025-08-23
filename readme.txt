@@ -1,5 +1,5 @@
 === AdSense Protect ===
-Contributors: your_name
+Contributors: Hasan Shofan
 Tags: adsense, protect, invalid clicks, clicks, bot, security, logs
 Requires at least: 5.0
 Tested up to: 6.8.2
@@ -41,4 +41,5 @@ Key Features:
 You can use the data from the 'Suspicious IPs' table and the generated CSV file to fill out Google AdSense's [Invalid Clicks Contact Form](https://support.google.com/adsense/contact/invalid_clicks_contact).
 
 = Is this plugin a replacement for my ad network's security? =
+
 No. This plugin is a simple tool to help you monitor and identify suspicious activity. You should always follow your ad network's policies and use their official reporting tools.
