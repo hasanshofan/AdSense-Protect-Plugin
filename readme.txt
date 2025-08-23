@@ -47,5 +47,3 @@ Use the data provided by this plugin to fill out the official [Google AdSense In
 
 = Is this plugin a replacement for my ad network's security? =
 No. This plugin is a simple tool to help you monitor and identify suspicious activity. You should always follow your ad network's policies and use their official reporting tools.
-
-
