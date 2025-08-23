@@ -249,6 +249,23 @@ add_action( 'admin_post_cl_export_external_logs', 'cl_export_external_logs_handl
 
 
 
+
+//--- يحذف الجدول بالكامل من قاعدة البيانات
+function cl_delete_logger_table() {
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'invalid_clicks_log';
+    
+    // يحذف الجدول بالكامل من قاعدة البيانات
+    $wpdb->query("DROP TABLE IF EXISTS $table_name");
+}
+
+register_uninstall_hook( __FILE__, 'cl_delete_logger_table' );
+
+
+
+
+
+
 // The function for the admin page content
 function cl_display_logger_page() {
     global $wpdb;
