@@ -7,7 +7,7 @@ Requires PHP: 7.0
 Stable tag: 1.0.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
-Donate link:
+Donate link: https://paypal.me/WikiArabiaAT?country.x=AT&locale.x=en_US
 
 A robust and flexible solution to protect your AdSense account from invalid clicks and bot activity.
 
@@ -47,4 +47,5 @@ Use the data provided by this plugin to fill out the official [Google AdSense In
 
 = Is this plugin a replacement for my ad network's security? =
 No. This plugin is a simple tool to help you monitor and identify suspicious activity. You should always follow your ad network's policies and use their official reporting tools.
+
 
