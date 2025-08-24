@@ -4,7 +4,7 @@
  * Description:       Logs user data to identify suspicious activity.
  * Version:           1.0.0
  * Author:            Hasan Shofan
- * Author URI:        https://wiki-arabic.com/
+ * Author URI:        https://facebook.com/hasan.shofan
  * License:           GPLv2 or later
  * Text Domain:       invalid-traffic-logger
  */
