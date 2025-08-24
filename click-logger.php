@@ -1,12 +1,12 @@
 <?php
 /**
- * Plugin Name:       AdSense Protect
+ * Plugin Name:       Invalid Traffic Logger
  * Description:       Logs user data to identify suspicious activity.
  * Version:           1.0.0
- * Author:            Your Name
- * Author URI:        https://example.com
+ * Author:            Hasan Shofan
+ * Author URI:        https://wiki-arabic.com/
  * License:           GPLv2 or later
- * Text Domain:       click-logger
+ * Text Domain:       invalid-traffic-logger
  */
 
 // Exit if accessed directly.
@@ -171,8 +171,8 @@ add_action( 'cl_hourly_cleanup_hook', 'cl_hourly_cleanup_handler' );
 
 function cl_add_admin_menu() {
     add_menu_page(
-        'AdSense Protect', 
-        'AdSense Protect', 
+        'Invalid Traffic Logger', 
+        'Invalid Traffic Logger', 
         'manage_options', 
         'adsense-protect-logger', // مسار جديد
         'cl_display_logger_page',
@@ -189,13 +189,16 @@ function cl_delete_all_logs_handler() {
 
     global $wpdb;
     $table_name = $wpdb->prefix . 'invalid_clicks_log';
-    $wpdb->query("TRUNCATE TABLE $table_name");
     
-    wp_redirect( admin_url('admin.php?page=invalid-clicks-logger&message=deleted') );
+    // تنفيذ الحذف بشكل آمن
+    $wpdb->query("TRUNCATE TABLE `{$table_name}`");
+
+    // إصلاح هنا: تغيير مسار إعادة التوجيه
+    $redirect_url = admin_url('admin.php?page=adsense-protect-logger&message=deleted');
+    wp_redirect( $redirect_url );
     exit;
 }
 add_action( 'admin_post_cl_delete_all_logs', 'cl_delete_all_logs_handler' );
-
 
 //--2. Creating the Export Function
 
@@ -206,17 +209,16 @@ function cl_export_external_logs_handler() {
 
     global $wpdb;
     $table_name = $wpdb->prefix . 'invalid_clicks_log';
+    
+    $query = "SELECT ip_address, user_agent, requested_page, COUNT(*) AS click_count
+              FROM `{$table_name}`
+              WHERE requested_page LIKE %s
+              GROUP BY ip_address, user_agent, requested_page
+              ORDER BY click_count DESC";
+    $results = $wpdb->get_results( $wpdb->prepare( $query, '[EXTERNAL_CLICK]%%' ), ARRAY_A );
+    
 
-    $results = $wpdb->get_results(
-        "SELECT ip_address, user_agent, requested_page, COUNT(*) AS click_count
-         FROM $table_name
-         WHERE requested_page LIKE '[EXTERNAL_CLICK]%%'
-         GROUP BY ip_address, user_agent, requested_page
-         ORDER BY click_count DESC",
-        ARRAY_A
-    );
-
-    $filename = 'external-clicks-' . date('Y-m-d') . '.csv';
+    $filename = 'external-clicks-' . gmdate('Y-m-d') . '.csv';
 
     // Start a buffer to avoid any output before headers
     ob_start();
@@ -280,34 +282,33 @@ function cl_display_logger_page() {
     //---------------------------------------------------------
     // قسم لعرض السجلات المجمّعة مع نظام Pagination
     //---------------------------------------------------------
-    $total_logs_count = $wpdb->get_var("SELECT COUNT(DISTINCT ip_address, user_agent, requested_page) FROM $table_name");
+    $total_logs_count = $wpdb->get_var("SELECT COUNT(DISTINCT ip_address, user_agent, requested_page) FROM {$table_name}");
+
+
     $current_page = isset($_GET['paged']) ? max(1, intval($_GET['paged'])) : 1;
     $offset = ($current_page - 1) * $logs_per_page;
     $total_pages = ceil($total_logs_count / $logs_per_page);
 
-    $query_all = $wpdb->prepare(
-        "SELECT ip_address, user_agent, requested_page, COUNT(*) AS click_count, MIN(request_time) AS first_click, MAX(request_time) AS last_click
-         FROM $table_name
-         GROUP BY ip_address, user_agent, requested_page
-         ORDER BY last_click DESC
-         LIMIT %d OFFSET %d",
-        $logs_per_page,
-        $offset
-    );
+ // استعلام عرض السجلات
+    $query_all = "SELECT ip_address, user_agent, requested_page, COUNT(*) AS click_count, MIN(request_time) AS first_click, MAX(request_time) AS last_click
+                 FROM `{$table_name}`
+                 GROUP BY ip_address, user_agent, requested_page
+                 ORDER BY last_click DESC
+                 LIMIT %d OFFSET %d";
+    $results_all = $wpdb->get_results( $wpdb->prepare( $query_all, $logs_per_page, $offset ), ARRAY_A );
     
-    $results_all = $wpdb->get_results( $query_all, ARRAY_A );
     
     // Get the list of suspicious IPs for highlighting
-    $suspicious_ips_query = $wpdb->prepare(
-        "SELECT ip_address FROM $table_name
-         WHERE requested_page LIKE '[EXTERNAL_CLICK]%%'
-         GROUP BY ip_address
-         HAVING COUNT(*) >= 3
-         ORDER BY COUNT(*) DESC
-         LIMIT %d",
-        $suspicious_ips_limit
-    );
-    $suspicious_ips_list = $wpdb->get_col($suspicious_ips_query);
+    // استعلام IPs المشبوهة
+ $query_suspicious = "SELECT ip_address FROM `{$table_name}`
+                        WHERE requested_page LIKE %s
+                        GROUP BY ip_address
+                        HAVING COUNT(*) >= 3
+                        ORDER BY COUNT(*) DESC
+                        LIMIT %d";
+    $suspicious_ips_list = $wpdb->get_col( $wpdb->prepare( $query_suspicious, '[EXTERNAL_CLICK]%%', $suspicious_ips_limit ) );
+    
+
     
     echo '<div class="wrap">';
     echo '<h1>سجل الزيارات الكامل</h1>';
@@ -323,7 +324,7 @@ function cl_display_logger_page() {
             'total' => $total_pages,
             'current' => $current_page,
         ));
-        echo $page_links;
+        echo wp_kses_post( $page_links );
         echo '</div></div>';
     }
 
@@ -337,8 +338,8 @@ function cl_display_logger_page() {
             $row_class = $is_suspicious ? 'class="suspicious-ip"' : '';
             $ip_html = $is_suspicious ? '<span style="color:red; font-weight:bold;">' . esc_html($row['ip_address']) . '</span>' : esc_html($row['ip_address']);
             
-            echo '<tr ' . $row_class . '>';
-            echo '<td>' . $ip_html . '</td>';
+            echo '<tr ' . esc_attr( $row_class ) . '>';
+			echo '<td>' . wp_kses_post( $ip_html ) . '</td>';
             echo '<td>' . esc_html( $row['user_agent'] ) . '</td>';
             echo '<td>' . ($row['click_count'] > 1 ? esc_html($row['click_count']) : '') . '</td>'; // Do not display 1
             echo '<td>' . esc_html( $row['requested_page'] ) . '</td>';
@@ -360,14 +361,14 @@ function cl_display_logger_page() {
         "SELECT ip_address, COUNT(ip_address) AS hit_count
          FROM $table_name
          WHERE request_time > DATE_SUB(NOW(), INTERVAL 24 HOUR)
-         AND requested_page LIKE '[EXTERNAL_CLICK]%%'
+         AND requested_page LIKE %s
          GROUP BY ip_address
          HAVING hit_count >= 3
          ORDER BY hit_count DESC
          LIMIT %d",
+        '[EXTERNAL_CLICK]%%',
         $suspicious_ips_limit
     );
-    
     $suspicious_ips = $wpdb->get_results( $query_suspicious, ARRAY_A );
     
     if ( $suspicious_ips ) {
@@ -395,18 +396,21 @@ function cl_display_logger_page() {
     echo '<div style="margin-top: 20px; display: flex; gap: 10px;">';
     
     // زر الحذف اليدوي
-    echo '<form method="post" action="' . esc_url( admin_url('admin-post.php') ) . '">';
-    echo '<input type="hidden" name="action" value="cl_delete_all_logs">';
-    echo wp_nonce_field('cl_delete_all_logs_nonce', '_wpnonce', true, false);
-    echo '<input type="submit" name="submit" id="submit" class="button button-danger" value="حذف السجل بالكامل" onclick="return confirm(\'هل أنت متأكد من أنك تريد حذف جميع السجلات بشكل دائم؟\');">';
-    echo '</form>';
-    
-    // زر التصدير
-    echo '<form method="post" action="' . esc_url( admin_url('admin-post.php') ) . '">';
-    echo '<input type="hidden" name="action" value="cl_export_external_logs">';
-    echo wp_nonce_field('cl_export_external_logs_nonce', '_wpnonce', true, false);
-    echo '<input type="submit" class="button button-primary" value="تصدير النقرات الخارجية (.csv)">';
-    echo '</form>';
+    // زر الحذف اليدوي
+echo '<form method="post" action="' . esc_url( admin_url('admin-post.php') ) . '">';
+echo '<input type="hidden" name="action" value="cl_delete_all_logs">';
+// هذا هو السطر المصحح
+wp_nonce_field('cl_delete_all_logs_nonce', '_wpnonce');
+echo '<input type="submit" name="submit" id="submit" class="button button-danger" value="حذف السجل بالكامل" onclick="return confirm(\'هل أنت متأكد من أنك تريد حذف جميع السجلات بشكل دائم؟\');">';
+echo '</form>';
+ 
+// زر التصدير
+echo '<form method="post" action="' . esc_url( admin_url('admin-post.php') ) . '">';
+echo '<input type="hidden" name="action" value="cl_export_external_logs">';
+// وهذا هو السطر المصحح
+wp_nonce_field('cl_export_external_logs_nonce', '_wpnonce');
+echo '<input type="submit" class="button button-primary" value="تصدير النقرات الخارجية (.csv)">';
+echo '</form>';
     
     echo '</div>'; // End of flex container
     
@@ -414,11 +418,11 @@ function cl_display_logger_page() {
     // الكود الخاص بالنافذة المنبثقة والجافاسكريبت
     //---------------------------------------------------------
     echo '<div id="cl-report-modal" style="display:none; position:fixed; z-index:100; left:0; top:0; width:100%; height:100%; overflow:auto; background-color:rgba(0,0,0,0.4);">';
-    echo '<div style="background-color:#fefefe; margin:15% auto; padding:20px; border:1px solid #888; width:80%;">';
+    echo '<div style="background-color:#fefefe; margin:15% auto; padding:20px; border:1px solid #888; width:60%;">';
     echo '<span class="close-btn" style="color:#aaa; float:right; font-size:28px; font-weight:bold; cursor:pointer;">&times;</span>';
     echo '<h2>تقرير IP مشبوه</h2>';
-    echo '<p>انسخ هذه البيانات وأرسلها عبر <a href="https://support.google.com/adsense/contact/invalid_clicks_contact" target="_blank">نموذج بلاغ جوجل</a>.</p>';
-    echo '<textarea id="cl-report-content" rows="10" style="width:100%;"></textarea>';
+    echo '<p>يمكنك نسخ هذا التقرير وإرساله إلى أي جهة</p>';
+    echo '<textarea id="cl-report-content" rows="10" style="width:100%;direction: ltr;"></textarea>';
     echo '</div></div>';
 
     echo '<script>';
@@ -432,7 +436,7 @@ function cl_display_logger_page() {
     echo '            reportButtons[i].onclick = function() {';
     echo '                var ip = this.getAttribute("data-ip");';
     echo '                reportModal.style.display = "block";';
-    echo '                document.getElementById("cl-report-content").value = "Dear AdSense Team,\\n\\nI am writing to report suspicious click activity on my account. The following IP address has exhibited invalid clicking behavior:\\n\\nIP Address: " + ip + "\\n\\nI have attached my logs for your reference.\\n\\nThank you.";';
+    echo '                document.getElementById("cl-report-content").value = "Dear [...],\\n\\nI am writing to report user(s) click activity on our website. The following IP address(s) has shown a specific behavior in clicking external links:\\n\\nIP Address: " + ip + "\\n\\nI have attached my logs for your reference.\\n\\nThank you.";';
     echo '            };';
     echo '        }';
     
